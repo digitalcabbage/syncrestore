@@ -54,71 +54,49 @@ As a final point I strongly recommend testing this out with a cut down version o
 
 To monitor the progress of the restore we open the SQLite database using the command line interface like this
 
-    ```
     sqlite3 syncrestore.db
-    ```
 
 So to see which user(s) is currently being restored
 
-    ```
     select name from users where sync=-2;
-    ```
 
 We can see how many users have been completed successfully and who they are with queries like this 
 
-    ```
     select count(name) from users where sync=0;
     select name from users where sync=0;
-    ```
 
 Or how many users are still to do
 
-    ```
     select count(name) from users where sync=1;
-    ```
 
 how many TB we have left to restore
 
-    ```
     select sum(blocks)/(1024*1024*1024) from users where sync=-1;
-    ```
 
 and how many files to go
 
-    ```
     select sum(files) from users where sync=-1;
-    ```
 
 One way to check on the progress of the current restore is to compare their quota usage (assuming you are using quotas) against the amount in the database. We can also see which users had problems with the restore
 
-    ```
     select name,sync from users when sync>0;
-    ```
 
 By looking at the exit codes we can make some determination of what went wrong. After fixing the problem and possibly deleting what was restored we can set the sync back to -1 with
 
-    ```
     update users set sync=-1 where name='joeblogs';
-    ```
 
 and the script will pick them up and try again next time it selects a candidate. Finally to exit the SQLite command line interface the command is 
 
-    ```
     .quit
-    ```
 
 ## Pausing the operation
 
 If for some reason we need to pause the operation then we can just set the sync to say -10
 
-    ```
     update users set sync=-10 where sync=-1;
-    ```
 
 and then as soon as the current users have finished the process will stop as there will be no more valid candidates. Once things are sorted you can set the sync back to -1 with
 
-    ```
     update users set sync=-1 where sync=-10;
-    ```
 
 and start the script again.
